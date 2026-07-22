@@ -26,27 +26,7 @@ async function startBot() {
   });
 
   sock.ev.on("creds.update", saveCreds);
-sock.ev.on("messages.upsert", async ({ messages }) => {
-  const msg = messages[0];
 
-  if (!msg.message) return;
-
-  const text =
-    msg.message.conversation ||
-    msg.message.extendedTextMessage?.text;
-
-  const from = msg.key.remoteJid;
-
-  console.log("Message:", text);
-
-  if (text === "hi") {
-    await sock.sendMessage(from, { text: "Hello 👋 bhai!" });
-  }
-
-  if (text === "loan") {
-    await sock.sendMessage(from, { text: "Loan ke liye visit karo: loankarts.in 💰" });
-  }
-});
   sock.ev.on("connection.update", async (update) => {
     const { qr, connection, lastDisconnect } = update;
 
@@ -64,6 +44,32 @@ sock.ev.on("messages.upsert", async ({ messages }) => {
       console.log("✅ WhatsApp Connected!");
     }
   });
+  sock.ev.on("messages.upsert", async (m) => {
+  const msg = m.messages[0];
+
+  if (!msg.message) return;
+  if (msg.key.fromMe) return; // 🔥 important
+
+  const from = msg.key.remoteJid;
+
+  let text = "";
+
+  if (msg.message.conversation) {
+    text = msg.message.conversation;
+  } else if (msg.message.extendedTextMessage) {
+    text = msg.message.extendedTextMessage.text;
+  }
+
+  console.log("Message:", text);
+
+  if (text.toLowerCase() === "hi") {
+    await sock.sendMessage(from, { text: "Hello 👋 bhai!" });
+  }
+
+  if (text.toLowerCase() === "loan") {
+    await sock.sendMessage(from, { text: "Loan ke liye visit karo 💰" });
+  }
+});
 }
 
 startBot();
