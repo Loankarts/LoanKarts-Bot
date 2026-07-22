@@ -1,6 +1,6 @@
 const express = require("express");
 const makeWASocket = require("@whiskeysockets/baileys").default;
-const { useMultiFileAuthState } = require("@whiskeysockets/baileys");
+const { useMultiFileAuthState, fetchLatestBaileysVersion } = require("@whiskeysockets/baileys");
 const QRCode = require("qrcode");
 
 const app = express();
@@ -18,8 +18,11 @@ app.get("/", (req, res) => {
 async function startBot() {
   const { state, saveCreds } = await useMultiFileAuthState("auth_info");
 
+  const { version } = await fetchLatestBaileysVersion(); // 🔥 IMPORTANT
+
   const sock = makeWASocket({
-    auth: state
+    auth: state,
+    version // 🔥 THIS FIXES LINK ERROR
   });
 
   sock.ev.on("creds.update", saveCreds);
