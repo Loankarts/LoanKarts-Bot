@@ -1,28 +1,33 @@
 const express = require("express");
 const makeWASocket = require("@whiskeysockets/baileys").default;
 const { useMultiFileAuthState } = require("@whiskeysockets/baileys");
-const qrcode = require("qrcode-terminal");
+const QRCode = require("qrcode");
 
 const app = express();
 
+let latestQR = "";
+
 app.get("/", (req, res) => {
-  res.send("WhatsApp Bot Running 🚀");
+  if (latestQR) {
+    res.send(`<img src="${latestQR}" />`);
+  } else {
+    res.send("QR load ho raha hai...");
+  }
 });
 
 async function startBot() {
   const { state, saveCreds } = await useMultiFileAuthState("auth_info");
 
   const sock = makeWASocket({
-    auth: state,
-    printQRInTerminal: true
+    auth: state
   });
 
   sock.ev.on("creds.update", saveCreds);
 
-  sock.ev.on("connection.update", ({ qr, connection }) => {
+  sock.ev.on("connection.update", async ({ qr, connection }) => {
     if (qr) {
-      console.log("Scan this QR:");
-      qrcode.generate(qr, { small: true });
+      latestQR = await QRCode.toDataURL(qr);
+      console.log("QR Updated");
     }
 
     if (connection === "open") {
